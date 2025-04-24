@@ -11,7 +11,7 @@ def import_data(path):
     """
     df = pd.read_csv(path)
     arr = df[["unix", "close"]].to_numpy().T # Transpose so timestamp and price are rows
-    arr = arr[:, arr[0,:].argsort()]        # Sort in ascending order of the first row (timestamp)
+    arr = arr[:, arr[0,:].argsort()]         # Sort in ascending order of the first row (timestamp)
     return arr
 
 def training_testing_split(data, unix_cutoff):
@@ -45,6 +45,12 @@ def EMA(price, days, alpha):
     K = alpha * np.power(1 - alpha, np.linspace(0, days, days)[::-1])
     K/= sum(K)
     return WMA(price, days, K)
+
+def combined_WMA(price, sma_weight, sma_length, lma_weight, lma_length, ema_weight, ema_length, ema_alpha):
+    sma = SMA(price, sma_length)
+    lma = LMA(price, lma_length)
+    ema = EMA(price, ema_length, ema_alpha)
+    return (sma_weight * sma + lma_weight * lma + ema_weight * ema) / (sma_weight + lma_weight + ema_weight)
 
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
