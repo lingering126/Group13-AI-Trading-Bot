@@ -1,0 +1,37 @@
+import numpy as np
+
+def backtest(weights, prices, start_amount=1000):
+    """
+    Mock backtest function for testing the evaluation pipeline.
+
+    Parameters:
+    - weights: np.ndarray of size 14
+    - prices: np.ndarray of price values
+    - start_amount: initial cash (default: 1000)
+
+    Returns:
+    - Simulated final cash value (float)
+    """
+    penalty = np.mean(weights) / 100
+    volatility_score = np.std(prices) / np.mean(prices)
+    final_cash = start_amount * (1 + 0.2 * (1 - penalty) + 0.05 * volatility_score)
+    final_cash = max(start_amount * 0.5, min(final_cash, start_amount * 2.0))
+    return final_cash
+
+def evaluate_strategy(weights, prices):
+    """
+    Evaluation function for the optimizer.
+
+    Parameters:
+    - weights: np.ndarray of size 14 (7 parameters × 2 WMAs)
+    - prices: np.ndarray of historical price data
+
+    Returns:
+    - float: final cash value from backtesting, used as the fitness score
+    """
+    assert isinstance(weights, np.ndarray), "weights must be a numpy array"
+    assert weights.shape[0] == 14, "weights must be a numpy array of size 14"
+    assert isinstance(prices, np.ndarray), "prices must be a numpy array"
+
+    final_cash = backtest(weights, prices, start_amount=1000)
+    return final_cash
