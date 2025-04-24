@@ -1,37 +1,61 @@
 import numpy as np
 
-def backtest(weights, prices, start_amount=1000):
+def evaluate(weights, prices, start_amount=1000, fee_rate=0.03):
     """
-    Mock backtest function for testing the evaluation pipeline.
-
+    Evaluation function with all backtesting rules implemented inside.
+    
     Parameters:
-    - weights: np.ndarray of size 14
-    - prices: np.ndarray of price values
-    - start_amount: initial cash (default: 1000)
+    - weights: np.ndarray of strategy parameters (length = 14 for 2 WMA with 7 weights each)
+    - prices: np.ndarray of historical prices
+    - start_amount: starting USD capital
+    - fee_rate: transaction fee (default 3%)
 
     Returns:
-    - Simulated final cash value (float)
+    - Final portfolio value in USD
     """
-    penalty = np.mean(weights) / 100
-    volatility_score = np.std(prices) / np.mean(prices)
-    final_cash = start_amount * (1 + 0.2 * (1 - penalty) + 0.05 * volatility_score)
-    final_cash = max(start_amount * 0.5, min(final_cash, start_amount * 2.0))
-    return final_cash
 
-def evaluate_strategy(weights, prices):
-    """
-    Evaluation function for the optimizer.
+    # Placeholder for WMA computation (just simulate)
+    short_weights = weights[:7]
+    long_weights = weights[7:]
 
-    Parameters:
-    - weights: np.ndarray of size 14 (7 parameters × 2 WMAs)
-    - prices: np.ndarray of historical price data
+    # Normalize weights
+    short_weights /= short_weights.sum()
+    long_weights /= long_weights.sum()
 
-    Returns:
-    - float: final cash value from backtesting, used as the fitness score
-    """
-    assert isinstance(weights, np.ndarray), "weights must be a numpy array"
-    assert weights.shape[0] == 14, "weights must be a numpy array of size 14"
-    assert isinstance(prices, np.ndarray), "prices must be a numpy array"
+    # Calculate weighted moving averages
+    def wma(prices, weights):
+        w = len(weights)
+        return np.convolve(prices, weights[::-1], mode='valid')
 
-    final_cash = backtest(weights, prices, start_amount=1000)
-    return final_cash
+    short_wma = wma(prices, short_weights)
+    long_wma = wma(prices, long_weights)
+
+    # Align all arrays to the same length
+    min_len = min(len(short_wma), len(long_wma))
+    short_wma = short_wma[-min_len:]
+    long_wma = long_wma[-min_len:]
+    prices = prices[-min_len:]
+
+    # Simulate trading logic according to evaluation spec
+    cash = start_amount
+    btc = 0.0
+    prev_diff = 0
+
+    for i in range(min_len):
+        diff = short_wma[i] - long_wma[i]
+        price = prices[i]
+
+        if diff > 0 and prev_diff <= 0 and cash > 0:
+            btc = (cash * (1 - fee_rate)) / price
+            cash = 0.0
+        elif diff < 0 and prev_diff >= 0 and btc > 0:
+            cash = btc * price * (1 - fee_rate)
+            btc = 0.0
+
+        prev_diff = diff
+
+    # Final sell if BTC remaining
+    if btc > 0:
+        cash = btc * prices[-1] * (1 - fee_rate)
+
+    return cash
