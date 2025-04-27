@@ -139,24 +139,54 @@ def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False
     if btc > 0:
         cash = btc * prices[-1] * (1 - fee_rate)
 
-    # Debug: Plot the progress
-    if plot:
-        plt.plot(training_data[0], prices, label="BTC")
-        plt.plot(training_data[0], short_wma, label="Short WMA", linestyle="--")
-        plt.plot(training_data[0], long_wma, label="Long WMA", linestyle="--")
-        plt.plot(training_data[0], 10000*buy_signal, label="buy signal")
-        plt.legend()
-        plt.title("Training Data and EMA")
-        plt.xlabel("Timestamp")
-        plt.ylabel("Price")
-        plt.show()
+    if plot: plot_ma_signals(prices, short_wma, long_wma, buy_signal)
 
     return cash
+
+def plot_ma_signals(prices, short_wma, long_wma, buy_signal, save_fig=False, fig_path=None):
+    """
+    Plot moving average signals
+    
+    Args:
+        prices: Array of price data
+        short_wma: Length of short moving average window
+        long_wma: Length of long moving average window
+        save_fig: Whether to save the figure
+        fig_path: Path to save the figure
+    """
+    # Create figure
+    plt.figure(figsize=(12, 8))
+    
+    # Plot price and moving averages
+    plt.plot(prices, label='Price', alpha=0.5, linewidth=1)
+    plt.plot(short_wma, label=f'Short WMA', linewidth=1.5)
+    plt.plot(long_wma, label=f'Long WMA', linewidth=1.5)
+    
+    # Plot buy signals
+    buy_indices = np.where(buy_signal == 1)[0]
+    sell_indices = np.where(buy_signal == -1)[0]
+    
+    plt.plot(buy_indices, prices[buy_indices], '^', markersize=10, color='g', label='Buy Signal')
+    plt.plot(sell_indices, prices[sell_indices], 'v', markersize=10, color='r', label='Sell Signal')
+    
+    plt.title('Moving Average Crossover Strategy')
+    plt.xlabel('Time')
+    plt.ylabel('Price')
+    plt.legend()
+    plt.grid(True)
+    
+    if save_fig and fig_path:
+        import os
+        os.makedirs(os.path.dirname(fig_path), exist_ok=True)
+        plt.savefig(fig_path)
+        plt.close()
+    else:
+        plt.show()
 
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
 
-cash = evaluate([0.8, 10, 0.1, 10, 0.1, 10, 0.5, 0.8, 100, 0.1, 100, 0.1, 100, 0.5], prices=training_data[1], plot=True)
+cash = evaluate([0.8, 20, 0.1, 20, 0.1, 20, 0.5, 0.8, 100, 0.1, 100, 0.1, 100, 0.5], prices=training_data[1], plot=True)
 
 print("Cash leftover: ", cash)
 
