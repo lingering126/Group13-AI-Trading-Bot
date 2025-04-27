@@ -7,7 +7,7 @@ DATA_PATH = "data/BTC-Daily.csv"
 def import_data(path):
     """ 
     Imports Bitcoin price data
-    returns: a 2d numpy array with unix timestamp and opening prices as the rows
+    Returns: a 2d numpy array with unix timestamp and opening prices as the rows
     """
     df = pd.read_csv(path)
     arr = df[["unix", "close"]].to_numpy().T # Transpose so timestamp and price are rows
@@ -52,17 +52,65 @@ def combined_WMA(price, sma_weight, sma_length, lma_weight, lma_length, ema_weig
     ema = EMA(price, ema_length, ema_alpha)
     return (sma_weight * sma + lma_weight * lma + ema_weight * ema) / (sma_weight + lma_weight + ema_weight)
 
+def generate_ma_crossover_signals(short_ma, long_ma):
+    """
+    Generate moving average crossover signals
+    
+    This function creates trading signals based on crossover of short and long-term
+    moving averages. 
+    
+    Args:
+        short_ma: array containing the more reactive weighted moving averages
+        long_ma: aeeay containing the less reactive weighted moving averages
+        
+    Returns:
+        Tuple containing:
+        - numpy array of signals: +1 (buy), -1 (sell), 0 (hold)
+        - short moving average values
+        - long moving average values
+    """
+    
+    # Ensure arrays have the same length
+    # This is important because different MA types/windows can produce arrays of different lengths
+    if len(short_ma) != len(long_ma):
+        print("WARNING: Moving averages are of different lengths")
+        min_len = min(len(short_ma), len(long_ma))
+        short_ma = short_ma[-min_len:]
+        long_ma = long_ma[-min_len:]
+    
+    # Generate signals based on crossovers
+    # Signal convention: +1 (buy), -1 (sell), 0 (hold)
+    # This matches the expected format in the backtesting module
+    crossover_signals = np.zeros(len(short_ma), dtype=int)
+    diff = short_ma - long_ma
+    
+    for i in range(1, len(short_ma)):
+        
+        # Buy signal: short MA crosses above long MA
+        if diff[i] > 0 and diff[i-1] <= 0:
+            crossover_signals[i] = 1
+        # Sell signal: short MA crosses below long MA
+        elif diff[i] < 0 and diff[i-1] >= 0:
+            crossover_signals[i] = -1
+    
+    return crossover_signals
+
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
 
-wma = EMA(training_data[1], 100, 2/101)
+wma1 = combined_WMA(training_data[1], 0.8, 100, 0.1, 100, 0.1, 100, 0.5)
+wma2 = combined_WMA(training_data[1], 0.8, 10, 0.1, 10, 0.1, 10, 0.5)
+
+buy_signal = generate_ma_crossover_signals(wma2, wma1)
 
 from matplotlib import pyplot as plt
 plt.plot(training_data[0], training_data[1], label="y")
-plt.plot(training_data[0], wma, label="WMA", linestyle="--")
+plt.plot(training_data[0], wma1, label="WMA1", linestyle="--")
+plt.plot(training_data[0], wma2, label="WMA2", linestyle="--")
+plt.plot(training_data[0], 10000*buy_signal, label="buy signal")
 plt.legend()
 plt.title("Training Data and EMA")
-plt.xlabel("Index")
+plt.xlabel("Timestamp")
 plt.ylabel("Price")
 plt.show()
 
