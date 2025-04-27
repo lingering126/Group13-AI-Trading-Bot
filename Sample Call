@@ -75,5 +75,5 @@ pso = ParticleSwarmOptimizer(
 
 best_params, best_score = pso.optimize()
 
-print("📈 Best Parameters Found:", best_params)
-print("💰 Final Portfolio Value:", best_score)
+print("Best Parameters Found:", best_params)
+print("Final Portfolio Value:", best_score)
