@@ -27,7 +27,6 @@ def pad(price, days):
 def WMA(price, days, kernel):
     price = pad(price, days)
     wma = np.correlate(price, kernel, mode="valid")
-    print(kernel, sum(kernel))
     return wma
 
 def SMA(price, days):
@@ -95,7 +94,7 @@ def generate_ma_crossover_signals(short_ma, long_ma):
     
     return crossover_signals
 
-def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03):
+def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False):
     """
     Evaluation function with all backtesting rules implemented inside.
     
@@ -109,49 +108,47 @@ def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03):
     - Final portfolio value in USD
     """
 
-    # Placeholder for WMA computation (just simulate)
+    # Split parameters between both wma
     short_params = parameters[:7]
     long_params = parameters[7:]
 
-    # Normalize weights
-    short_params /= short_params.sum()
-    long_params /= long_params.sum()
+    # Calculate moving averages
+    short_wma = combined_WMA(prices, *short_params)
+    long_wma = combined_WMA(prices, *long_params)
 
-    # Calculate weighted moving averages
-    def wma(prices, weights):
-        w = len(weights)
-        return np.convolve(prices, weights[::-1], mode='valid')
-
-    short_wma = wma(prices, short_params)
-    long_wma = wma(prices, long_params)
-
-    # Align all arrays to the same length
-    min_len = min(len(short_wma), len(long_wma))
-    short_wma = short_wma[-min_len:]
-    long_wma = long_wma[-min_len:]
-    prices = prices[-min_len:]
+    # Generate buy signal
+    buy_signal = generate_ma_crossover_signals(short_wma, long_wma)
 
     # Simulate trading logic according to evaluation spec
     cash = start_amount
     btc = 0.0
-    prev_diff = 0
 
-    for i in range(min_len):
-        diff = short_wma[i] - long_wma[i]
-        price = prices[i]
-
-        if diff > 0 and prev_diff <= 0 and cash > 0:
-            btc = (cash * (1 - fee_rate)) / price
+    for i, signal in enumerate(buy_signal):
+        current_price = prices[i]
+        if signal == 1 and cash > 0: # Buy signal
+            btc = cash / current_price * (1 - fee_rate)
+            if verbose: print(f"Buying {btc:.2f}BTC with {cash:.2f}USD at time {i}")
             cash = 0.0
-        elif diff < 0 and prev_diff >= 0 and btc > 0:
-            cash = btc * price * (1 - fee_rate)
+        elif signal == -1 and btc > 0:
+            cash = btc * current_price * (1 - fee_rate)
+            if verbose: print(f"Selling {btc:.2f}BTC into {cash:.2f}USD at time {i}")
             btc = 0.0
-
-        prev_diff = diff
 
     # Final sell if BTC remaining
     if btc > 0:
         cash = btc * prices[-1] * (1 - fee_rate)
+
+    # Debug: Plot the progress
+    from matplotlib import pyplot as plt
+    plt.plot(training_data[0], prices, label="BTC")
+    plt.plot(training_data[0], short_wma, label="Short WMA", linestyle="--")
+    plt.plot(training_data[0], long_wma, label="Long WMA", linestyle="--")
+    plt.plot(training_data[0], 10000*buy_signal, label="buy signal")
+    plt.legend()
+    plt.title("Training Data and EMA")
+    plt.xlabel("Timestamp")
+    plt.ylabel("Price")
+    plt.show()
 
     return cash
 
@@ -163,14 +160,5 @@ wma2 = combined_WMA(training_data[1], 0.8, 10, 0.1, 10, 0.1, 10, 0.5)
 
 buy_signal = generate_ma_crossover_signals(wma2, wma1)
 
-from matplotlib import pyplot as plt
-plt.plot(training_data[0], training_data[1], label="y")
-plt.plot(training_data[0], wma1, label="WMA1", linestyle="--")
-plt.plot(training_data[0], wma2, label="WMA2", linestyle="--")
-plt.plot(training_data[0], 10000*buy_signal, label="buy signal")
-plt.legend()
-plt.title("Training Data and EMA")
-plt.xlabel("Timestamp")
-plt.ylabel("Price")
-plt.show()
+print("Cash leftover: ", evaluate([0.8, 10, 0.1, 10, 0.1, 10, 0.5, 0.8, 100, 0.1, 100, 0.1, 100, 0.5], prices=training_data[1]))
 
