@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from datetime import datetime
+from matplotlib import pyplot as plt
 
 DATA_PATH = "data/BTC-Daily.csv"
 
@@ -94,7 +95,7 @@ def generate_ma_crossover_signals(short_ma, long_ma):
     
     return crossover_signals
 
-def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False):
+def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False, plot=False):
     """
     Evaluation function with all backtesting rules implemented inside.
     
@@ -139,26 +140,23 @@ def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False
         cash = btc * prices[-1] * (1 - fee_rate)
 
     # Debug: Plot the progress
-    from matplotlib import pyplot as plt
-    plt.plot(training_data[0], prices, label="BTC")
-    plt.plot(training_data[0], short_wma, label="Short WMA", linestyle="--")
-    plt.plot(training_data[0], long_wma, label="Long WMA", linestyle="--")
-    plt.plot(training_data[0], 10000*buy_signal, label="buy signal")
-    plt.legend()
-    plt.title("Training Data and EMA")
-    plt.xlabel("Timestamp")
-    plt.ylabel("Price")
-    plt.show()
+    if plot:
+        plt.plot(training_data[0], prices, label="BTC")
+        plt.plot(training_data[0], short_wma, label="Short WMA", linestyle="--")
+        plt.plot(training_data[0], long_wma, label="Long WMA", linestyle="--")
+        plt.plot(training_data[0], 10000*buy_signal, label="buy signal")
+        plt.legend()
+        plt.title("Training Data and EMA")
+        plt.xlabel("Timestamp")
+        plt.ylabel("Price")
+        plt.show()
 
     return cash
 
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
 
-wma1 = combined_WMA(training_data[1], 0.8, 100, 0.1, 100, 0.1, 100, 0.5)
-wma2 = combined_WMA(training_data[1], 0.8, 10, 0.1, 10, 0.1, 10, 0.5)
+cash = evaluate([0.8, 10, 0.1, 10, 0.1, 10, 0.5, 0.8, 100, 0.1, 100, 0.1, 100, 0.5], prices=training_data[1], plot=True)
 
-buy_signal = generate_ma_crossover_signals(wma2, wma1)
-
-print("Cash leftover: ", evaluate([0.8, 10, 0.1, 10, 0.1, 10, 0.5, 0.8, 100, 0.1, 100, 0.1, 100, 0.5], prices=training_data[1]))
+print("Cash leftover: ", cash)
 
