@@ -81,22 +81,19 @@ def generate_ma_crossover_signals(self, short_ma, long_ma):
     # Generate signals based on crossovers
     # Signal convention: +1 (buy), -1 (sell), 0 (hold)
     # This matches the expected format in the backtesting module
-    signals = np.zeros(len(), dtype=int)
-    prev_diff = short_ma[0] - long_ma[0]
+    crossover_signals = np.zeros(len(short_ma), dtype=int)
+    diff = short_ma - long_ma
     
     for i in range(1, len(short_ma)):
-        curr_diff = short_ma[i] - long_ma[i]
         
         # Buy signal: short MA crosses above long MA
-        if curr_diff > 0 and prev_diff <= 0:
-            signals[i] = 1
+        if diff[i] > 0 and diff[i-1] <= 0:
+            crossover_signals[i] = 1
         # Sell signal: short MA crosses below long MA
-        elif curr_diff < 0 and prev_diff >= 0:
-            signals[i] = -1
-            
-        prev_diff = curr_diff
+        elif diff[i] < 0 and diff[i-1] >= 0:
+            crossover_signals[i] = -1
     
-    return signals, short_ma, long_ma
+    return crossover_signals, short_ma, long_ma
 
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
