@@ -52,7 +52,7 @@ def combined_WMA(price, sma_weight, sma_length, lma_weight, lma_length, ema_weig
     ema = EMA(price, ema_length, ema_alpha)
     return (sma_weight * sma + lma_weight * lma + ema_weight * ema) / (sma_weight + lma_weight + ema_weight)
 
-def generate_ma_crossover_signals(self, short_ma, long_ma):
+def generate_ma_crossover_signals(short_ma, long_ma):
     """
     Generate moving average crossover signals
     
@@ -93,19 +93,24 @@ def generate_ma_crossover_signals(self, short_ma, long_ma):
         elif diff[i] < 0 and diff[i-1] >= 0:
             crossover_signals[i] = -1
     
-    return crossover_signals, short_ma, long_ma
+    return crossover_signals
 
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
 
-wma = EMA(training_data[1], 100, 2/101)
+wma1 = combined_WMA(training_data[1], 0.8, 100, 0.1, 100, 0.1, 100, 0.5)
+wma2 = combined_WMA(training_data[1], 0.8, 10, 0.1, 10, 0.1, 10, 0.5)
+
+buy_signal = generate_ma_crossover_signals(wma2, wma1)
 
 from matplotlib import pyplot as plt
 plt.plot(training_data[0], training_data[1], label="y")
-plt.plot(training_data[0], wma, label="WMA", linestyle="--")
+plt.plot(training_data[0], wma1, label="WMA1", linestyle="--")
+plt.plot(training_data[0], wma2, label="WMA2", linestyle="--")
+plt.plot(training_data[0], 10000*buy_signal, label="buy signal")
 plt.legend()
 plt.title("Training Data and EMA")
-plt.xlabel("Index")
+plt.xlabel("Timestamp")
 plt.ylabel("Price")
 plt.show()
 
