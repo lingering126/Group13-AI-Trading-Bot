@@ -108,6 +108,9 @@ def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False
     Returns:
     - Final portfolio value in USD
     """
+    integer_params = [1, 3, 5, 8, 10, 12]
+    for i in integer_params:
+        parameters[i] = round(parameters[i])
 
     # Split parameters between both wma
     short_params = parameters[:7]
