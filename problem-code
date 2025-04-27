@@ -96,7 +96,7 @@ def generate_ma_crossover_signals(short_ma, long_ma):
     
     return crossover_signals
 
-def evaluate(best_parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False, plot=False):
+def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False, plot=False):
     """
     Evaluation function with all backtesting rules implemented inside.
     
@@ -109,13 +109,13 @@ def evaluate(best_parameters, prices, start_amount=1000, fee_rate=0.03, verbose=
     Returns:
     - Final portfolio value in USD
     """
-    #integer_params = [1, 3, 5, 8, 10, 12]
-    for i in range(14):
-        best_parameters[i] = round(best_parameters[i])
+    integer_params = [1, 3, 5, 8, 10, 12]
+    for i in integer_params:
+        parameters[i] = round(parameters[i])
 
     # Split parameters between both wma
-    short_params = best_parameters[:7]
-    long_params = best_parameters[7:]
+    short_params = parameters[:7]
+    long_params = parameters[7:]
 
     # Calculate moving averages
     short_wma = combined_WMA(prices, *short_params)
@@ -190,12 +190,28 @@ def plot_ma_signals(prices, short_wma, long_wma, buy_signal, save_fig=False, fig
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
 
-# 14 parameters total: 7 short WMA weights + 7 long WMA weights
-bounds = [[0, 1]] * 14  # Each weight between 0 and 1
+#EUSHA
+# Defining the bounds for the parameters (14 total)
+bounds = [
+    [0, 1],    # short_wma_weight_1
+    [1, 1000], # short_wma_length_1
+    [0, 1],    # short_wma_weight_2
+    [1, 1000], # short_wma_length_2
+    [0, 1],    # short_wma_weight_3
+    [1, 1000], # short_wma_length_3
+    [0, 1],    # short_wma_weight_4
+    [1, 1000], # long_wma_length_1
+    [0, 1],    # long_wma_weight_1
+    [1, 1000], # long_wma_length_2
+    [0, 1],    # long_wma_weight_2
+    [1, 1000], # long_wma_length_3
+    [0, 1],    # alpha for EMA
+    [0, 1]     # alpha for EMA (second one)
+]
 
 # Wrapping the evaluate function to accept only weights
 def fitness_function(weights):
-    return evaluate(weights, training_data)
+    return evaluate(weights, prices)
 
 # Initialize and run PSO
 pso = ParticleSwarmOptimizer(
