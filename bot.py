@@ -95,12 +95,12 @@ def generate_ma_crossover_signals(short_ma, long_ma):
     
     return crossover_signals
 
-def evaluate(weights, prices, start_amount=1000, fee_rate=0.03):
+def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03):
     """
     Evaluation function with all backtesting rules implemented inside.
     
     Parameters:
-    - weights: np.ndarray of strategy parameters (length = 14 for 2 WMA with 7 weights each)
+    - parameters: np.ndarray of strategy parameters (length = 14 for 2 WMA with 7 weights each)
     - prices: np.ndarray of historical prices
     - start_amount: starting USD capital
     - fee_rate: transaction fee (default 3%)
@@ -110,20 +110,20 @@ def evaluate(weights, prices, start_amount=1000, fee_rate=0.03):
     """
 
     # Placeholder for WMA computation (just simulate)
-    short_weights = weights[:7]
-    long_weights = weights[7:]
+    short_params = parameters[:7]
+    long_params = parameters[7:]
 
     # Normalize weights
-    short_weights /= short_weights.sum()
-    long_weights /= long_weights.sum()
+    short_params /= short_params.sum()
+    long_params /= long_params.sum()
 
     # Calculate weighted moving averages
     def wma(prices, weights):
         w = len(weights)
         return np.convolve(prices, weights[::-1], mode='valid')
 
-    short_wma = wma(prices, short_weights)
-    long_wma = wma(prices, long_weights)
+    short_wma = wma(prices, short_params)
+    long_wma = wma(prices, long_params)
 
     # Align all arrays to the same length
     min_len = min(len(short_wma), len(long_wma))
