@@ -9,9 +9,9 @@ class SignalGenerator:
     This class generates trading signals based on technical analysis of price data.
     """
     
-    def __init__(self):
-        """Initialize the signal generator"""
-        pass
+    def __init__(self, prices=None):
+        """Initialize the signal generator with optional price data"""
+        self.prices = prices
     
     def generate_ma_signals(self, prices, short_window=10, long_window=50):
         """
@@ -57,6 +57,31 @@ class SignalGenerator:
         }
         
         return signals, indicators
+    
+    def generate_ma_crossover_signals(self, short_window, long_window, ma_type="SMA"):
+        """
+        Generate moving average crossover signals
+        
+        This method exists for backward compatibility with existing code.
+        
+        Args:
+            short_window: size of short-term moving average window
+            long_window: size of long-term moving average window
+            ma_type: type of moving average to use (not used in this implementation, kept for compatibility)
+            
+        Returns:
+            Tuple containing:
+            - numpy array of signals: +1 (buy), -1 (sell), 0 (hold)
+            - short moving average values
+            - long moving average values
+        """
+        if self.prices is None:
+            raise ValueError("Prices must be set either in constructor or by calling generate_ma_signals directly")
+        
+        # Use the standard generate_ma_signals method
+        signals, indicators = self.generate_ma_signals(self.prices, short_window, long_window)
+        
+        return signals, indicators['short_ma'], indicators['long_ma']
     
     def _calculate_ma(self, data, window):
         """
