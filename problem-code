@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 from matplotlib import pyplot as plt
+from PSO import ParticleSwarmOptimizer
 
 DATA_PATH = "data/BTC-Daily.csv"
 
@@ -48,9 +49,9 @@ def EMA(price, days, alpha):
     return WMA(price, days, K)
 
 def combined_WMA(price, sma_weight, sma_length, lma_weight, lma_length, ema_weight, ema_length, ema_alpha):
-    sma = SMA(price, sma_length)
-    lma = LMA(price, lma_length)
-    ema = EMA(price, ema_length, ema_alpha)
+    sma = SMA(price, int(sma_length))
+    lma = LMA(price, int(lma_length))
+    ema = EMA(price, int(ema_length), ema_alpha)
     return (sma_weight * sma + lma_weight * lma + ema_weight * ema) / (sma_weight + lma_weight + ema_weight)
 
 def generate_ma_crossover_signals(short_ma, long_ma):
@@ -190,23 +191,25 @@ def plot_ma_signals(prices, short_wma, long_wma, buy_signal, save_fig=False, fig
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
 
+prices = training_data[1]
+
 #EUSHA
 # Defining the bounds for the parameters (14 total)
 bounds = [
     [0, 1],    # short_wma_weight_1
-    [1, 1000], # short_wma_length_1
+    [1, 500], # short_wma_length_1
     [0, 1],    # short_wma_weight_2
-    [1, 1000], # short_wma_length_2
+    [1, 500], # short_wma_length_2
     [0, 1],    # short_wma_weight_3
-    [1, 1000], # short_wma_length_3
-    [0, 1],    # short_wma_weight_4
-    [1, 1000], # long_wma_length_1
+    [1, 500], # short_wma_length_3
+    [0.01, 1],    # short_wma_alpha for EMA
     [0, 1],    # long_wma_weight_1
-    [1, 1000], # long_wma_length_2
+    [1, 500], # long_wma_length_1
     [0, 1],    # long_wma_weight_2
-    [1, 1000], # long_wma_length_3
-    [0, 1],    # alpha for EMA
-    [0, 1]     # alpha for EMA (second one)
+    [1, 500], # long_wma_length_2
+    [0, 1],    # long_wma_weight_3
+    [1, 500], # long_wma_length_3
+    [0.01, 1]     # long_wma_alpha for EMA (second one)
 ]
 
 # Wrapping the evaluate function to accept only weights
@@ -217,12 +220,11 @@ def fitness_function(weights):
 pso = ParticleSwarmOptimizer(
     fitness_function=fitness_function,
     bounds=bounds,
-    num_particles=60,
+    num_particles=100,
     max_iter=100
 )
 
 best_params, best_score = pso.optimize()
 
-cash = evaluate(best_params, prices=training_data[1], plot=True)
-
-print("Cash leftover: ", cash)
+print(best_params, best_score)
+evaluate(best_params, prices=training_data[1], plot=True)
