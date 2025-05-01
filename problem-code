@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime
 from matplotlib import pyplot as plt
 
-DATA_PATH = "BTC-Daily.csv"
+DATA_PATH = "data/BTC-Daily.csv"
 
 def import_data(path):
     """ 
