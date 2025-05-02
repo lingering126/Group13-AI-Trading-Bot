@@ -110,9 +110,6 @@ def evaluate(parameters, prices, start_amount=1000, fee_rate=0.03, verbose=False
     Returns:
     - Final portfolio value in USD
     """
-    integer_params = [1, 3, 5, 8, 10, 12]
-    for i in integer_params:
-        parameters[i] = round(parameters[i])
 
     # Split parameters between both wma
     short_params = parameters[:7]
@@ -188,6 +185,16 @@ def plot_ma_signals(prices, short_wma, long_wma, buy_signal, save_fig=False, fig
     else:
         plt.show()
 
+PARAM_NAMES = ["Short SMA weight", "Short SMA length", "Short LMA weight", "Short LMA length", "Short EMA weight", "Short EMA length", "Short EMA alpha",
+                "Long SMA weight", "Long SMA length", "Long LMA weight", "Long LMA length", "Long EMA weight", "Long EMA length", "Long EMA alpha"]
+
+def print_parameters(parameters):
+    for name, parameter in zip(PARAM_NAMES, parameters):
+        if "length" in name:
+            print(f"{name}: {int(parameter)}")
+        else:
+            print(f"{name}: {round(parameter, 6)}")
+
 data = import_data(DATA_PATH)
 training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).timestamp())
 
@@ -227,4 +234,5 @@ pso = ParticleSwarmOptimizer(
 best_params, best_score = pso.optimize()
 
 print(best_params, best_score)
+print_parameters(best_params)
 evaluate(best_params, prices=training_data[1], plot=True)
