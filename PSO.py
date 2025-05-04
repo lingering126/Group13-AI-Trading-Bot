@@ -37,7 +37,8 @@ class ParticleSwarmOptimizer:
 
   # Main function:
     def optimize(self):
-        for _ in range(self.max_iter):
+        for i in range(self.max_iter):
+            print(f"Iteration {i}: Best score: {self.global_best_score}")
           # Evaluating each particle for max_iter number of times
             for particle in self.swarm:
                 pos = particle['position']
