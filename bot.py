@@ -177,3 +177,13 @@ def plot_ma_signals(prices, short_wma, long_wma, buy_signal, save_fig=False, fig
         plt.close()
     else:
         plt.show()
+        
+PARAM_NAMES = ["Short SMA weight", "Short SMA length", "Short LMA weight", "Short LMA length", "Short EMA weight", "Short EMA length", "Short EMA alpha",
+                "Long SMA weight", "Long SMA length", "Long LMA weight", "Long LMA length", "Long EMA weight", "Long EMA length", "Long EMA alpha"]
+
+def print_parameters(parameters):
+    for name, parameter in zip(PARAM_NAMES, parameters):
+        if "length" in name:
+            print(f"{name}: {int(parameter)}")
+        else:
+            print(f"{name}: {round(parameter, 6)}")
