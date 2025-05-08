@@ -7,13 +7,13 @@ training_data, testing_data = training_testing_split(data, datetime(2020, 1, 1).
 
 # Define parameter bounds
 bounds = [
-    (0, 1), (1, 100), (0, 1),  # SMA parameters
-    (1, 100), (0, 1), (1, 100),  # LMA parameters
-    (0, 1), (0, 1), (1, 100),  # EMA parameters
-    (0, 1), (1, 100), (0, 1),  # SMA parameters
-    (1, 100), (0, 1), (1, 100),  # LMA parameters
-    (0, 1)  # EMA parameters
-]
+            (0, 1), (1, 200), 
+            (0, 1), (1, 200), 
+            (0, 1), (1, 200), (0, 1), 
+            (0, 1), (1, 200),
+            (0, 1), (1, 200), 
+            (0, 1), (1, 200), (0, 1)
+        ]
 
 
 # Create objective function

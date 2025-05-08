@@ -9,18 +9,18 @@ prices = training_data[1]
 # Defining the bounds for the parameters (14 total)
 bounds = [
     [0, 1],    # short_wma_weight_1
-    [1, 500], # short_wma_length_1
+    [1, 200], # short_wma_length_1
     [0, 1],    # short_wma_weight_2
-    [1, 500], # short_wma_length_2
+    [1, 200], # short_wma_length_2
     [0, 1],    # short_wma_weight_3
-    [1, 500], # short_wma_length_3
+    [1, 200], # short_wma_length_3
     [0.01, 1],    # short_wma_alpha for EMA
     [0, 1],    # long_wma_weight_1
-    [1, 500], # long_wma_length_1
+    [1, 200], # long_wma_length_1
     [0, 1],    # long_wma_weight_2
-    [1, 500], # long_wma_length_2
+    [1, 200], # long_wma_length_2
     [0, 1],    # long_wma_weight_3
-    [1, 500], # long_wma_length_3
+    [1, 200], # long_wma_length_3
     [0.01, 1]     # long_wma_alpha for EMA (second one)
 ]
 
