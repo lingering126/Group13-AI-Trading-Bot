@@ -2,7 +2,7 @@ import pandas as pd
 from datetime import datetime
 import time
 
-def run_all_optimizers(data_path, n_runs=5):
+def run_all_optimizers(data_path, n_runs=10):
     results = []
 
     for run in range(1, n_runs + 1):
@@ -88,14 +88,19 @@ def run_all_optimizers(data_path, n_runs=5):
         })
 
     df = pd.DataFrame(results)
+
     summary = df.groupby("Algorithm").agg({
-        "Train Score": ["mean", lambda x: max(x) - min(x)],
-        "Test Score": ["mean", lambda x: max(x) - min(x)],
+        "Train Score": ["mean", lambda x: max(x) - min(x), "max", "min"],
+        "Test Score": ["mean", lambda x: max(x) - min(x), "max", "min"],
         "Time (s)": "mean"
     })
-    summary.columns = ["Train Avg", "Train Range", "Test Avg", "Test Range", "Avg Time (s)"]
+    summary.columns = [
+        "Train Avg", "Train Range", "Train Best", "Train Worst",
+        "Test Avg", "Test Range", "Test Best", "Test Worst",
+        "Avg Time (s)"
+    ]
     return df, summary
 
-results_df, summary_df = run_all_optimizers(DATA_PATH, n_runs=5)
+results_df, summary_df = run_all_optimizers(DATA_PATH, n_runs=10)
 print(results_df)
 print("\nSummary:\n", summary_df)
